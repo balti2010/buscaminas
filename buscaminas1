@@ -1,0 +1,150 @@
+//Buscaminas. Baltasar Cañete.
+
+import java.util.Scanner;
+import java.util.Random;
+    class buscaminas{
+        private static final int FILAS = 9;
+        private static final int COLUMNAS = 9;
+        private static final int MINAS = 10;
+        private static final char MINA = '*';
+        private static final char VACIO = '.';
+        private static final char NO_DESCUBIERTO = '?';
+        
+        public static void main(String[]args){
+            char[][] tablero = new char[FILAS][COLUMNAS];
+            boolean[][] descubierta = new boolean[FILAS][COLUMNAS];
+            boolean jugando=true;
+            int filaJugador=0;
+            int columnaJugador=0;
+            iniciarTablero(tablero);
+            iniciarDescubierta(descubierta);
+            mostrarTablero(tablero, descubierta);
+            while(jugando){
+                posicionJugador(filaJugador, columnaJugador);
+                jugando=false;
+            }
+        }
+        private static void iniciarDescubierta(boolean[][]descubierta){
+            for(int i=0; i<FILAS; i++){
+                for(int y=0; y<COLUMNAS; y++){
+                    descubierta[i][y]=false;
+                }
+            }
+        }
+        private static void iniciarTablero(char[][]tablero){
+            for(int i=0; i<FILAS; i++){
+                for(int y=0; y<COLUMNAS; y++){
+                    tablero[i][y]=VACIO;
+                }
+            }
+            minasTablero(tablero);
+            numerosTablero(tablero);
+        }
+        private static void minasTablero(char[][]tablero){
+            Random random=new Random();
+            int minas=MINAS;
+            while(minas !=0){
+                int filaAleatoria= random.nextInt(FILAS);
+                int columnaAleatoria= random.nextInt(COLUMNAS);
+                if(tablero[filaAleatoria][columnaAleatoria]!=MINA){ //evita que haya dos minas en el mismo spot
+                    tablero[filaAleatoria][columnaAleatoria]=MINA;
+                    minas--;
+                }
+            }
+        }
+        private static void numerosTablero(char[][]tablero){
+            int columna;
+            for(int i=0; i<FILAS; i++){
+                columna=0;
+                while(columna<COLUMNAS){
+                    recorrerTablero(tablero, columna, i);
+                    columna++;
+                }
+            }
+        }
+        private static void recorrerTablero(char[][]tablero, int columna, int i){
+            if(tablero[i][columna]!=MINA){
+                celdasAdyacentes(tablero, columna, i);
+            }
+        }
+        private static void celdasAdyacentes(char[][]tablero, int columna, int i){
+            int minasAdyacentes=0;
+            // verifica que esten dentro de la matriz las celdas
+            for(int k=i-1; k<=i+1; k++){
+                for(int j=columna-1; j<=columna+1; j++){
+                    boolean limite=limites(tablero, j, k);
+                    if(limite){
+                        minasAdyacentes++;
+                    }
+                }
+            }
+            tablero[i][columna]=numerodeminas(minasAdyacentes);
+        }
+        private static boolean limites(char[][]tablero, int j, int k){
+            if((k>=0 && k<FILAS)&& (j>=0 && j<COLUMNAS)){
+                if(tablero[k][j]==MINA){
+                    return true;
+                }
+            }
+            return false;
+        }
+        private static char numerodeminas(int minasAdyacentes){
+            char numero='0';
+            if(minasAdyacentes==0){
+                numero='0';    
+            }
+            if(minasAdyacentes==1){
+                numero='1';    
+            }
+            if(minasAdyacentes==2){
+                numero='2';    
+            }
+            if(minasAdyacentes==3){
+                numero='3';    
+            }
+            if(minasAdyacentes==4){
+                numero='4';    
+            }
+            if(minasAdyacentes==5){
+                numero='5';    
+            }
+            if(minasAdyacentes==6){
+                numero='6';    
+            }
+            if(minasAdyacentes==7){
+                numero='7';    
+            }
+            if(minasAdyacentes==8){
+                numero='8';    
+            }
+            return numero;
+        }
+        //Hasta aca ya se carga la matriz, con las minas y las celdas adyacentes con el numero dependiendo de cuantas minas tenga cerca
+        //ahora me falta la otra mitad del coso
+        
+        public static void mostrarTablero(char[][]tablero, boolean[][]descubierta){
+            for(int i=0; i<FILAS; i++){
+                int columna=0;
+                while(columna<COLUMNAS){
+                    if(descubierta[i][columna]==false){
+                        System.out.print(NO_DESCUBIERTO+"  ");
+                        columna++;
+                    }if(columna==COLUMNAS){
+                        System.out.println();
+                    }
+                }
+            }
+        }
+        public static void posicionJugador(int filaJugador, int columnaJugador){
+            Scanner reader=new Scanner(System.in);
+            int numero=0;
+            boolean valido=false;
+            System.out.print("Ingrese fila y columna(0-8): "+fila(filaJugador)+' '+columna(columnaJugador+);
+        }
+        private static int fila(int filaJugador){
+            return 0;
+        }
+        private static int columna(int columnaJugador){
+            return 0;
+        }
+    }
