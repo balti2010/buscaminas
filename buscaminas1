@@ -11,18 +11,23 @@ import java.util.Random;
         private static final char NO_DESCUBIERTO = '?';
         
         public static void main(String[]args){
+            
             char[][] tablero = new char[FILAS][COLUMNAS];
             boolean[][] descubierta = new boolean[FILAS][COLUMNAS];
             boolean jugando=true;
-            int filaJugador=0;
-            int columnaJugador=0;
+            boolean jugando2=true;
+            int[]posicion=new int[2];
+            int contadorJugadas=0;
             iniciarTablero(tablero);
             iniciarDescubierta(descubierta);
-            mostrarTablero(tablero, descubierta);
-            while(jugando){
-                posicionJugador(filaJugador, columnaJugador);
-                jugando=false;
+            while(jugando && jugando2){
+                mostrarTablero(tablero, descubierta);
+                posicionJugador(posicion);
+                contadorJugadas++;
+                jugando=progresoJuego(tablero, descubierta, posicion, jugando);
+                jugando2=verificarMinas(descubierta, tablero, jugando);
             }
+            System.out.println("Alcanzaste a jugar "+contadorJugadas+" veces.");
         }
         private static void iniciarDescubierta(boolean[][]descubierta){
             for(int i=0; i<FILAS; i++){
@@ -57,34 +62,32 @@ import java.util.Random;
             for(int i=0; i<FILAS; i++){
                 columna=0;
                 while(columna<COLUMNAS){
-                    recorrerTablero(tablero, columna, i);
+                    if(tablero[i][columna]!=MINA){
+                        int minasAdyacentes=celdasAdyacentes(tablero, columna, i);
+                        tablero[i][columna]=numerodeminas(minasAdyacentes);
+                    }    
                     columna++;
                 }
             }
         }
-        private static void recorrerTablero(char[][]tablero, int columna, int i){
-            if(tablero[i][columna]!=MINA){
-                celdasAdyacentes(tablero, columna, i);
-            }
-        }
-        private static void celdasAdyacentes(char[][]tablero, int columna, int i){
-            int minasAdyacentes=0;
+        private static int celdasAdyacentes(char[][]tablero, int columna, int i){
             // verifica que esten dentro de la matriz las celdas
+            int minasAlrededor=0;
             for(int k=i-1; k<=i+1; k++){
                 for(int j=columna-1; j<=columna+1; j++){
                     boolean limite=limites(tablero, j, k);
                     if(limite){
-                        minasAdyacentes++;
-                    }
+                        if(tablero[k][j]==MINA){
+                            minasAlrededor++;
+                        }
+                    }    
                 }
             }
-            tablero[i][columna]=numerodeminas(minasAdyacentes);
+            return minasAlrededor;
         }
         private static boolean limites(char[][]tablero, int j, int k){
             if((k>=0 && k<FILAS)&& (j>=0 && j<COLUMNAS)){
-                if(tablero[k][j]==MINA){
-                    return true;
-                }
+                return true;
             }
             return false;
         }
@@ -117,34 +120,102 @@ import java.util.Random;
             if(minasAdyacentes==8){
                 numero='8';    
             }
-            return numero;
+            return numero;// no es corto no eficiente, no se me cayó una idea
         }
         //Hasta aca ya se carga la matriz, con las minas y las celdas adyacentes con el numero dependiendo de cuantas minas tenga cerca
         //ahora me falta la otra mitad del coso
         
         public static void mostrarTablero(char[][]tablero, boolean[][]descubierta){
+            int i, k;
+            for(i=0; i<FILAS; i++){
+                for(k=0; k<COLUMNAS; k++){
+                    imprimirTablero(tablero, descubierta, i, k);
+                }
+                System.out.println();
+            }
+        }
+        private static void imprimirTablero(char[][]tablero, boolean[][]descubierta, int i, int k){
+            if(descubierta[i][k]==false){
+                System.out.print(NO_DESCUBIERTO+"  ");
+            }else if(descubierta[i][k]==true){
+                System.out.print(tablero[i][k]+"  ");
+            }
+        }
+        public static void posicionJugador(int[]posicion){
+            System.out.print("Ingrese fila y columna (0-8): ");
+            String numeros;
+            numeros=obtenerNumeros();
+            String[]dividir= numeros.split(" "); // parte en dos el string, pone los numeros en el arreglo
+            int filaJugador=Integer.parseInt(dividir[0]); //Integer.parseInt convierte laa parte del arregloen un entero
+            int columnaJugador=Integer.parseInt(dividir[1]);
+            posicion[0]=filaJugador;
+            posicion[1]=columnaJugador;
+            
+        }
+        public static String obtenerNumeros(){
+            Scanner reader=new Scanner(System.in);
+            String num=" ";
+            boolean valido=false;
+            while(!valido){
+                try{
+                    num= reader.nextLine();
+                    valido=true;
+                }
+                catch(Exception e){
+                    reader.next();
+                }
+            }
+            return num;
+        }
+        private static boolean progresoJuego(char[][]tablero, boolean[][]descubierta, int[]posicion, boolean jugando){
+            int fila, columna;
+            fila=posicion[0];
+            columna=posicion[1];
+            if(tablero[fila][columna]==MINA){
+                System.out.println("¡Has encontrado una mina! Fin del juego.");
+                return false;
+            }
+            celdassinMinas(tablero, descubierta, fila, columna);
+            return true;
+        }
+        private static void celdassinMinas(char[][]tablero, boolean[][]descubierta, int fila, int columna){ //este metodo se repite para despejar las celdas del numero ingresado (metodo recursivo);
+            if(celdaLimite(descubierta, fila, columna)){
+                return; //si se sale de los limites vuelve
+            }
+            if(descubierta[fila][columna]==true){
+                return;// si ya se despejo vuelve haciendo nada
+            }
+            descubierta[fila][columna]=true;
+            if(tablero[fila][columna]=='0'){
+                for(int k=fila-1; k<=fila+1; k++){
+                    for (int j=columna-1; j<=columna+1; j++){
+                        if((k!=fila || j!=columna)&&limites(tablero, j, k)){ //q la adyacente no sea la de ahora, y esta en el limite
+                            celdassinMinas(tablero, descubierta, k, j);
+                        }
+                    }
+                }    
+            }
+        }        
+        private static boolean celdaLimite(boolean[][]descubierta, int fila, int columna){
+            if((fila<0 || fila>=FILAS) || (columna<0 || columna>=COLUMNAS)){
+                return true;
+            }
+            return false;
+        }
+        private static boolean verificarMinas(boolean[][]descubierta, char[][]tablero, boolean jugando2){
+            int contador=0;
             for(int i=0; i<FILAS; i++){
-                int columna=0;
-                while(columna<COLUMNAS){
-                    if(descubierta[i][columna]==false){
-                        System.out.print(NO_DESCUBIERTO+"  ");
-                        columna++;
-                    }if(columna==COLUMNAS){
-                        System.out.println();
+                for(int k=0; k<COLUMNAS; k++){
+                    if(descubierta[i][k]==true){
+                        contador++;
                     }
                 }
             }
-        }
-        public static void posicionJugador(int filaJugador, int columnaJugador){
-            Scanner reader=new Scanner(System.in);
-            int numero=0;
-            boolean valido=false;
-            System.out.print("Ingrese fila y columna(0-8): "+fila(filaJugador)+' '+columna(columnaJugador+);
-        }
-        private static int fila(int filaJugador){
-            return 0;
-        }
-        private static int columna(int columnaJugador){
-            return 0;
+            if(contador==((FILAS*COLUMNAS)-MINAS)){
+                mostrarTablero(tablero, descubierta);
+                System.out.println("¡Has ganado! Todas las celdas descubiertas");
+                return false;
+            }
+            return true;
         }
     }
